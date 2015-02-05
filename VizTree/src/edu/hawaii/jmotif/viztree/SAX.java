@@ -1,5 +1,8 @@
 package edu.hawaii.jmotif.viztree;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class SAX {
       private int      num_seg;
       private byte     alphabet_size;
@@ -95,60 +98,37 @@ public class SAX {
       public int getNumSeg()
       {
           return num_seg;
-        set 
+      }
+      
+      public void setNumSeg(int value)
         {
           num_seg = value;
         }
 
-      }
-
-      public byte AlphabetSize
+      public byte getAlphabetSize()
       {
-        get
-        {
           return alphabet_size;
         }
 
-        set
+      public void setAlphabetSize(int value)
         {
-          alphabet_size = value;
+          alphabet_size = (byte) value;
         }
-      }
+      
 
-      /*public double[] Data
+      public byte[] getSAX_symbol()
       {
-        get
-        {
-          return time_series;
-        }
-
-        set
-        {
-          Data = value;
-        }
-      }*/
-
-      public byte[] SAX_symbol
-      {
-        get
-        {
           return symbols;
-        }
       }
-
-      // methods
 
       public void SetData(double[] data)
       {
-        if (time_series.Length < data.Length)
-          time_series = new double[data.Length];
-
-        Array.Copy(data,0,time_series,0, data.Length);
+        time_series = Arrays.copyOf(data,data.length);
       }
 
-      public byte[] ConvertSAX(bool NORM)
+      public byte[] ConvertSAX(boolean NORM)
       {
-        double rem = Math.IEEERemainder(time_series.Length, num_seg);
+        double rem = Math.IEEEremainder(time_series.length, num_seg);
         double[] PAA = new double[num_seg];
 
 //        min = 0;
@@ -166,7 +146,7 @@ public class SAX {
           if (NORM)
           {
             // Normalize the time series first
-            double[] normalized;// = new double[time_series.Length];
+            double[] normalized;// = new double[time_series.length];
             normalized = Normalize();
 
 //            max = GetMax(normalized);
@@ -174,14 +154,14 @@ public class SAX {
 
             // replicate the time series so that it can be divided into num_seg
             // evenly
-            ts_dup = DupArray(normalized, lcm/time_series.Length);
+            ts_dup = DupArray(normalized, lcm/time_series.length);
           }
           
           else
           {
             // replicate the time series so that it can be divided into num_seg
             // evenly
-            ts_dup = DupArray(time_series, lcm/time_series.Length);
+            ts_dup = DupArray(time_series, lcm/time_series.length);
           }
             
           PAA = GetPAA(ts_dup);
@@ -196,7 +176,7 @@ public class SAX {
           if (NORM)
           {
             // Normalize the time series first
-            double[] normalized;// = new double[time_series.Length];
+            double[] normalized;// = new double[time_series.length];
             normalized = Normalize();
 
 //            max = GetMax(normalized);
@@ -216,7 +196,7 @@ public class SAX {
         }
 
         //  Console.WriteLine("PAA Segments:");
-        //  for (int i = 0; i < PAA.Length; i++)
+        //  for (int i = 0; i < PAA.length; i++)
         //    Console.WriteLine(Convert.ToString(PAA[i]));
 
         //  byte[] symbols = new byte[num_seg];
@@ -227,7 +207,7 @@ public class SAX {
       
       public byte[] GetSymbol(double[] PAA)
       {     
-        bool FOUND = false;
+        boolean FOUND = false;
 
         for (int i = 0; i < num_seg; i++)
         {
@@ -259,16 +239,16 @@ public class SAX {
       private double[] GetPAA(double[] data)
       {     
         // Determine the segment size
-        int segment_size = data.Length / num_seg;
+        int segment_size = data.length / num_seg;
 
         int offset = 0;
 
         double[] PAA = new double[num_seg];
 
         // if no dimensionality reduction, then just copy the data
-        if (num_seg == data.Length)
+        if (num_seg == data.length)
         {
-          Array.Copy(data, PAA, data.Length); //PAA = data;
+          PAA = Arrays.copyOf(data, data.length); //PAA = data;
         }
 
         for (int i = 0; i < num_seg; i++)
@@ -284,15 +264,15 @@ public class SAX {
       {
         double min_dist = 0.0;
 
-        if (data1.Length == data2.Length && data1.Length == num_seg)
+        if (data1.length== data2.length&& data1.length== num_seg)
         {
           for (byte i = 0; i < num_seg; i++)
           {
-            min_dist += dist_matrix[data1[i]-1, data2[i]-1];    
+            min_dist = min_dist + dist_matrix[data1[i]-1][data2[i]-1];    
           }
 
           // Multiply min_dist by the compression ratio and take the square-root
-          min_dist = Math.Sqrt(time_series.Length/num_seg * min_dist);
+          min_dist = Math.sqrt(time_series.length/num_seg * min_dist);
 
           return min_dist;
         }
@@ -304,7 +284,7 @@ public class SAX {
       private void BuildDistMatrix()
       {
       
-        dist_matrix = new double[alphabet_size, alphabet_size];
+        dist_matrix = new double[alphabet_size][alphabet_size];
 
         for (byte i = 0; i < alphabet_size; i++)
         {
@@ -312,15 +292,15 @@ public class SAX {
           {
             // Min_dist of the adjacent symbols is 0
             if (j <= i+1)
-              dist_matrix[i,j] = 0;
+              dist_matrix[i][j] = 0;
 
             else
               // Sqaure the distance now for future use
-              dist_matrix[i,j] = Math.Pow((breakpoints[i] - breakpoints[j-1]),2);
+              dist_matrix[i][j] = Math.pow((breakpoints[i] - breakpoints[j-1]),2);
 
             // The distance matrix is symmetric
             if (i != j)
-              dist_matrix[j,i] = dist_matrix[i,j];
+              dist_matrix[j][i] = dist_matrix[i][j];
           }
         }
       }
@@ -329,15 +309,15 @@ public class SAX {
       // in knowing if the distance of two strings is 0, we can do so without any extra
       // computation.  Since only adjacent symbols have distance 0, all we have to
       // do is check if any two symbols are non-adjacent.
-      public bool ZeroDist(byte[] data1, byte[] data2)
+      public boolean ZeroDist(byte[] data1, byte[] data2)
       {
-        if (data1.Length == data2.Length && data1.Length == num_seg)
+        if (data1.length == data2.length && data1.length == num_seg)
         {
           for (byte i = 0; i < num_seg; i++)
           {
             // If any two symbols in the same offsets are differed by more than 1, then they're
             // not the same nor adjacent
-            if (Math.Abs(data1[i] - data2[i]) > 1)
+            if (Math.abs(data1[i] - data2[i]) > 1)
             {
               return false;
             }
@@ -349,7 +329,7 @@ public class SAX {
         return true;
       }
 
-      public bool IsMonotonic(byte[] data)
+      public boolean IsMonotonic(byte[] data)
       {
         byte ZERO = 0;
         byte POS = 1;
@@ -358,7 +338,7 @@ public class SAX {
         byte cur_sign;
         byte prev_sign;
 
-        if (data.Length == num_seg)
+        if (data.length == num_seg)
         {
           if ((data[1] - data[0]) > 0)
             prev_sign = POS;
@@ -393,14 +373,14 @@ public class SAX {
       // segments
       protected int GetGCD()
       {
-        int u = time_series.Length;
+        int u = time_series.length;
         int v = num_seg;
         int div;
         int divisible_check;
 
         while (v > 0)
         {
-          div = (int)Math.Floor((double)u/(double)v);
+          div = (int)Math.floor((double)u/(double)v);
           divisible_check = u - v * div;
           u = v;
           v = divisible_check;
@@ -415,7 +395,7 @@ public class SAX {
       {
         int gcd = GetGCD();
 
-        int len = time_series.Length;
+        int len = time_series.length;
         int n = num_seg;
 
         return (len * (n / gcd));
@@ -425,9 +405,9 @@ public class SAX {
       protected double[] DupArray(double[] data, int dup)
       {
         int cur_index = 0;
-        double[] dup_array = new double[data.Length * dup];
+        double[] dup_array = new double[data.length * dup];
 
-        for (int i = 0; i < data.Length; i++)
+        for (int i = 0; i < data.length; i++)
         {
           for (int j = 0; j < dup; j++)
           {
@@ -446,12 +426,12 @@ public class SAX {
         double mean = Mean();
         double std = StdDev();
 
-        double[] normalized = new double[time_series.Length];
+        double[] normalized = new double[time_series.length];
 
         if (std == 0)
           std = 1;
 
-        for (int i = 0; i < time_series.Length; i++)
+        for (int i = 0; i < time_series.length; i++)
         {
           normalized[i] = (time_series[i] - mean) / std;
         }
@@ -465,14 +445,14 @@ public class SAX {
         double mean = Mean();
         double var = 0.0;
 
-        for (int i = 0; i < time_series.Length; i++)
+        for (int i = 0; i < time_series.length; i++)
         {
-          var += Math.Pow((time_series[i] - mean), 2);
+          var += Math.pow((time_series[i] - mean), 2);
         }
         
-        var /= (time_series.Length - 1);
+        var /= (time_series.length - 1);
 
-        return Math.Sqrt(var);
+        return Math.sqrt(var);
       }
 
       // Calculate the average of any section of the data
@@ -480,8 +460,8 @@ public class SAX {
       {
         //try
         //{
-        if (index1 < 0 || index2 < 0 || index1 >= data.Length ||
-          index2 >= data.Length)
+        if (index1 < 0 || index2 < 0 || index1 >= data.length ||
+          index2 >= data.length)
         {
           throw new Exception("Invalid index!");
         }
@@ -506,14 +486,14 @@ public class SAX {
 
       public double Mean()
       {
-        return Mean(time_series, 0, time_series.Length-1);
+        return Mean(time_series, 0, time_series.length-1);
       }
 
       private double GetMax(double[] data)
       {
         double max = data[0];
 
-        for (int i = 1; i < data.Length; i++)
+        for (int i = 1; i < data.length; i++)
         {
           if (data[i] > max)
             max = data[i];
@@ -526,7 +506,7 @@ public class SAX {
       {
         double min = data[0];
 
-        for (int i = 1; i < data.Length; i++)
+        for (int i = 1; i < data.length; i++)
         {
           if (data[i] < min)
             min = data[i];
@@ -541,7 +521,7 @@ public class SAX {
     class SuffixTree
     {
       private int window_len;
-      byte[,] arSymbol;
+      byte[][] arSymbol;
       int[] arOffset;
         
       public SuffixTree()
@@ -599,7 +579,7 @@ public class SAX {
         {
           word = input.Split(' ');
 
-          for (int i = 0; i < word.Length; i++)
+          for (int i = 0; i < word.length; i++)
           {
             if (word[i] == "NaN")
             {
@@ -731,7 +711,7 @@ public class SAX {
       //  3: record string only if its mindist from the previously recorded one > 0
       //  4: record string only if it's not monotonic
       public ArrayList BuildMatrix(ArrayList alData, ref int[] arOffset, byte alphabet_size, 
-        int num_seg, bool NORM, byte NR_option)
+        int num_seg, boolean NORM, byte NR_option)
       {
         SAX s = new SAX(num_seg,alphabet_size);
 
@@ -768,12 +748,12 @@ public class SAX {
 
           byte[] string_copy = new byte[num_seg];
 
-          Array.Copy(cur_string, 0, string_copy, 0, cur_string.Length);
+          Array.Copy(cur_string, 0, string_copy, 0, cur_string.length);
 
           // Record the first string no matter what (unless if we want only non-monotonic strings)
           if (i == 0)// && (NR_option != 4 || !s.IsMonotonic(string_copy)))
           {
-            Array.Copy(cur_string, 0, last_string, 0, cur_string.Length);
+            Array.Copy(cur_string, 0, last_string, 0, cur_string.length);
             alSymbol.Add(string_copy);
             alOffset.Add(i);
             subseq_count++;
@@ -794,7 +774,7 @@ public class SAX {
             {
               alSymbol.Add(string_copy);        
               alOffset.Add(i);
-              Array.Copy(string_copy, 0, last_string, 0, string_copy.Length);
+              Array.Copy(string_copy, 0, last_string, 0, string_copy.length);
               subseq_count++;
 
   /*            if ( cur_max > max_norm )
@@ -813,7 +793,7 @@ public class SAX {
                 {
                   alSymbol.Add(string_copy);        
                   alOffset.Add(i);
-                  Array.Copy(string_copy, 0, last_string, 0, string_copy.Length);
+                  Array.Copy(string_copy, 0, last_string, 0, string_copy.length);
                   subseq_count++;
 
   /*                if ( cur_max > max_norm )
@@ -831,7 +811,7 @@ public class SAX {
               {
                 alSymbol.Add(string_copy);        
                 alOffset.Add(i);
-                Array.Copy(string_copy, 0, last_string, 0, string_copy.Length);
+                Array.Copy(string_copy, 0, last_string, 0, string_copy.length);
                 subseq_count++;
 
   /*              if ( cur_max > max_norm )
@@ -871,7 +851,7 @@ public class SAX {
       {
         double max = data[0];
 
-        for (int i = 1; i < data.Length; i++)
+        for (int i = 1; i < data.length; i++)
         {
           if (data[i] > max)
             max = data[i];
@@ -884,7 +864,7 @@ public class SAX {
       {
         double min = data[0];
 
-        for (int i = 1; i < data.Length; i++)
+        for (int i = 1; i < data.length; i++)
         {
           if (data[i] < min)
             min = data[i];
@@ -893,14 +873,14 @@ public class SAX {
 
       }
 
-      public bool IsEqual(byte[] data1, byte[] data2)
+      public boolean IsEqual(byte[] data1, byte[] data2)
       {
-        if (data1.Length != data2.Length)
+        if (data1.length != data2.length)
           return false;
 
-        bool eq = true;
+        boolean eq = true;
 
-        for (int i = 0; i < data1.Length; i++)
+        for (int i = 0; i < data1.length; i++)
         {
           if (data1[i] != data2[i])
           {
